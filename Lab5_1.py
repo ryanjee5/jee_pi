@@ -29,5 +29,5 @@ except KeyboardInterrupt:
     pass		
 
 finally:
-pwm.stop()
-GPIO.cleanup()
+	pwm.stop()
+	GPIO.cleanup()
