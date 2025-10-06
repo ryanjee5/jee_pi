@@ -24,7 +24,7 @@ try:
 		t = time.time() - t0
 		B = math.sin(2*math.pi*f*t)**2
 		dc= B * 100 #duty cycle
-pwm.ChangeDutyCycle(dc)
+		pwm.ChangeDutyCycle(dc)
 except KeyboardInterrupt:
     pass		
 
