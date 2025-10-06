@@ -45,6 +45,7 @@ except KeyboardInterrupt:
     pass		
 
 finally:
+	GPIO.remove_event_detect(button)
 	for pwm in pwms:
 		pwm.ChangeDutyCycle(0)
 		pwm.stop()
