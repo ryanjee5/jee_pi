@@ -34,7 +34,7 @@ def set_brightness(idx: int, duty: int):
     _pwms[idx].ChangeDutyCycle(duty)
 
 def render_page() -> bytes:
-    # Build the HTML with the current brightness values baked into the text.
+    # Build radio buttons with the correct "checked" state and live % labels
     radios = []
     for i in range(3):
         checked = " checked" if i == _selected else ""
@@ -45,21 +45,26 @@ def render_page() -> bytes:
         )
     radios_html = "\n".join(radios)
 
+    # Slider shows the CURRENT value for the currently selected LED
+    slider_value = _duty[_selected]
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <title>LED Brightness</title>
   <style>
-    body { font-family: sans-serif; }
-    .card {
-      width: 260px; padding: 14px; border: 1px solid #ccc; border-radius: 6px;
-    }
-    fieldset { border: none; margin: 0; padding: 0; }
-    .btn {
-      margin-top: 10px; padding: 6px 10px; border: 1px solid #aaa; border-radius: 4px;
+    body {{ font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }}
+    .card {{
+      width: 280px; padding: 14px; border: 1px solid #ccc; border-radius: 8px;
+      margin: 18px; background: #fafafa;
+    }}
+    fieldset {{ border: none; margin: 0; padding: 0; }}
+    .btn {{
+      margin-top: 10px; padding: 6px 10px; border: 1px solid #aaa; border-radius: 6px;
       background: #eee; cursor: pointer;
-    }
+    }}
+    small {{ color: #444; }}
   </style>
 </head>
 <body>
@@ -67,25 +72,24 @@ def render_page() -> bytes:
     <form method="POST" action="/">
       <fieldset>
         <div><strong>Brightness level:</strong></div>
-        <input type="range" name="level" min="0" max="100" value="CURRENT_LED_VALUE">
+        <input type="range" name="level" min="0" max="100" value="{slider_value}">
       </fieldset>
       <br>
       <fieldset>
         <div><strong>Select LED:</strong></div>
-
-        <div><input type="radio" name="led" value="0"> LED 1 (0%)</div>
-        <div><input type="radio" name="led" value="1"> LED 2 (28%)</div>
-        <div><input type="radio" name="led" value="2"> LED 3 (0%)</div>
-
+        {radios_html}
       </fieldset>
       <button class="btn" type="submit">Change Brightness</button>
     </form>
 
-    <p><small>Current levels — LED1: 0% · LED2: 28% · LED3: 0%</small></p>
+    <p><small>
+      Current levels — LED1: {_duty[0]}% · LED2: {_duty[1]}% · LED3: {_duty[2]}%
+    </small></p>
   </div>
 </body>
 </html>"""
     return html.encode("utf-8")
+
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
