@@ -60,7 +60,7 @@ def render_page() -> bytes:
 <body>
   <div class="card">
     {sliders_html}
-    <div class="hint">Moving a slider sends a POST instantly. No submit needed.</div>
+    <div class="hint">Triple Slider!</div>
   </div>
 
   <script>
