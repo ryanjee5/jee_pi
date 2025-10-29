@@ -1,22 +1,18 @@
 import json
-
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs
 import RPi.GPIO as GPIO
 import sys
 
-# ---------- Hardware config ----------
-# BCM pin numbers for your LEDs (change if needed)
 LED_PINS = [17, 27, 22]       # LED1, LED2, LED3
 PWM_FREQ = 500                # Hz
 
-# ---------- GPIO setup ----------
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
 _pwms = []
-_duty = [0, 0, 0]             # persistent brightness levels (0–100)
-_selected = 0                 # which LED the form currently shows as selected
+_duty = [0, 0, 0]             # brightness levels (0–100)
+_selected = 0                 # the selected LED
 
 for p in LED_PINS:
     GPIO.setup(p, GPIO.OUT, initial=GPIO.LOW)
@@ -125,7 +121,7 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
             data = self.rfile.read(length).decode("utf-8")
 
-            # Our JS sends application/x-www-form-urlencoded
+            # translates code to be read in python
             form = parse_qs(data)
 
             if "led" in form and form["led"]:
@@ -135,7 +131,7 @@ class Handler(BaseHTTPRequestHandler):
                 new_level = int(float(form["level"][0]))
                 set_brightness(_selected, new_level)
 
-            # Respond with JSON so fetch(...) can update labels
+            # Respond with JSON so fetch can update labels
             payload = json.dumps({
                 "ok": True,
                 "duty": _duty,
@@ -156,12 +152,12 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(err)
 
-    # Quiet the default logging a bit
-    def log_message(self, fmt, *args):
+   
+    def log_message(self, fmt, *args): #no spam
         return
 
 
-def main(port=8000):
+def main(port=8000): #starts server
     server = HTTPServer(("", port), Handler)
     print(f"Serving on http://0.0.0.0:{port}  (Ctrl+C to quit)")
     try:
@@ -175,8 +171,8 @@ def main(port=8000):
         GPIO.cleanup()
         print("\nClean exit.")
 
-if __name__ == "__main__":
-    # Optionally accept a port number: python3 rpi_led_web_pwm.py 8080
+if __name__ == "__main__":#if the file is ran start the server
+    
     if len(sys.argv) > 1:
         main(int(sys.argv[1]))
     else:
