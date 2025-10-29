@@ -1,20 +1,11 @@
-#!/usr/bin/env python3
-# rpi_led_web_pwm.py
-#
-# Simple HTTP server (no JS) that controls 3 LED brightness levels via PWM.
-# Uses Python's built-in http.server (TCP/IP) + RPi.GPIO.
-
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs
 import RPi.GPIO as GPIO
 import sys
 
-# ---------- Hardware config ----------
-# BCM pin numbers for your LEDs (change if needed)
 LED_PINS = [17, 27, 22]       # LED1, LED2, LED3
-PWM_FREQ = 500                # Hz
+PWM_FREQ = 500                
 
-# ---------- GPIO setup ----------
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
@@ -34,7 +25,6 @@ def set_brightness(idx: int, duty: int):
     _pwms[idx].ChangeDutyCycle(duty)
 
 def render_page() -> bytes:
-    # Build radio buttons with the correct "checked" state and live % labels
     radios = []
     for i in range(3):
         checked = " checked" if i == _selected else ""
@@ -48,6 +38,7 @@ def render_page() -> bytes:
     # Slider shows the CURRENT value for the currently selected LED
     slider_value = _duty[_selected]
 
+#html code provided by chatgpt
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,7 +83,7 @@ def render_page() -> bytes:
 
 
 class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
+    def do_GET(self): #webpage
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         body = render_page()
@@ -100,7 +91,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def do_POST(self):
+    def do_POST(self): #results
         global _selected
         try:
             length = int(self.headers.get("Content-Length", "0"))
@@ -127,11 +118,11 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    # Quiet the default logging a bit
-    def log_message(self, fmt, *args):
+    
+    def log_message(self, fmt, *args): #no spam
         return
 
-def main(port=8000):
+def main(port=8000): #starts server
     server = HTTPServer(("", port), Handler)
     print(f"Serving on http://0.0.0.0:{port}  (Ctrl+C to quit)")
     try:
@@ -145,8 +136,8 @@ def main(port=8000):
         GPIO.cleanup()
         print("\nClean exit.")
 
-if __name__ == "__main__":
-    # Optionally accept a port number: python3 rpi_led_web_pwm.py 8080
+if __name__ == "__main__": #if the file is ran start the server
+    
     if len(sys.argv) > 1:
         main(int(sys.argv[1]))
     else:
