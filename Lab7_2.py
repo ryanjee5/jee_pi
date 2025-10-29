@@ -119,50 +119,47 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    ddef do_POST(self):
-    global _selected
-    try:
-        length = int(self.headers.get("Content-Length", "0"))
-        data = self.rfile.read(length).decode("utf-8")
+    def do_POST(self):
+        global _selected
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            data = self.rfile.read(length).decode("utf-8")
 
-        # Support classic form-encoded (used by our fetch)
-        form = parse_qs(data)
+            # Our JS sends application/x-www-form-urlencoded
+            form = parse_qs(data)
 
-        if "led" in form and form["led"]:
-            _selected = int(form["led"][0])
+            if "led" in form and form["led"]:
+                _selected = int(form["led"][0])
 
-        if "level" in form and form["level"]:
-            new_level = int(float(form["level"][0]))
-            set_brightness(_selected, new_level)
+            if "level" in form and form["level"]:
+                new_level = int(float(form["level"][0]))
+                set_brightness(_selected, new_level)
 
-        # Respond with JSON so the browser JS can update labels
-        payload = json.dumps({ "ok": True, "duty": _duty, "selected": _selected }).encode("utf-8")
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
+            # Respond with JSON so fetch(...) can update labels
+            payload = json.dumps({
+                "ok": True,
+                "duty": _duty,
+                "selected": _selected
+            }).encode("utf-8")
 
-    except Exception as e:
-        err = json.dumps({ "ok": False, "error": str(e) }).encode("utf-8")
-        self.send_response(500)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(err)))
-        self.end_headers()
-        self.wfile.write(err)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
 
-
-        # Always return a fresh page showing current levels
-        self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        body = render_page()
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        except Exception as e:
+            err = json.dumps({"ok": False, "error": str(e)}).encode("utf-8")
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(err)))
+            self.end_headers()
+            self.wfile.write(err)
 
     # Quiet the default logging a bit
     def log_message(self, fmt, *args):
         return
+
 
 def main(port=8000):
     server = HTTPServer(("", port), Handler)
